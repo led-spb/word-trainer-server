@@ -1,0 +1,20 @@
+POST http://localhost:5000/auth/login
+Content-Type: applicaion/json
+
+{"login":"heres", "password": "heres"}
+
+POST http://localhost:5000/auth/logout
+
+
+GET http://localhost:5000/user
+
+###
+GET http://localhost:5000/user/stat
+
+PUT http://localhost:5000/user/stat
+Content-Type: application/json
+
+{
+    "success": [12],
+    "failed": [3453]
+}
