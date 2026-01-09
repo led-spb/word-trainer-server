@@ -18,8 +18,8 @@ def user_identity_lookup(user):
 def user_lookup(identity):
     return User.query.filter_by(id=identity).one_or_none()
 
-@auth.route('/login', methods=['POST'])
-def login():
+@auth.route('/token', methods=['POST'])
+def token():
     data = UserLoginSchema().load(request.get_json())
 
     auth_user = User.query.filter(User.name == data.get('login')).one_or_none()
@@ -31,18 +31,10 @@ def login():
             'access_token': access_token,
             #'refresh_token': refresh_token,
         })
-
-        set_access_cookies(response, access_token)
+        #set_access_cookies(response, access_token)
     else:
         response = jsonify({
             'error': 'Unkown user or bad password',
         })
         response.status_code = 401
-    return response
-
-
-@auth.route('/logout', methods=['POST'])
-def logout():
-    response = jsonify({})
-    unset_access_cookies(response)
     return response

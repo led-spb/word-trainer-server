@@ -1,7 +1,7 @@
 from flask import Blueprint, request, current_app as app
 from models.user import db, User, UserStat
 from marshmallow import Schema, fields
-from datetime import datetime
+from datetime import date
 from flask_jwt_extended import jwt_required, current_user
 
 
@@ -36,9 +36,9 @@ def get_user_stat():
 def update_user_stat():
     data = UserStatSchema().load(request.get_json())
 
-    stat = UserStat.query.filter(
-        UserStat.user_id == current_user.id and UserStat.datetime == datetime.today()
-    ).first()
+    stat = db.session.execute(
+        db.select(UserStat).filter_by(user_id=current_user.id).filter_by(recorderd_at=date.today())
+    ).scalar_one_or_none()
 
     if stat is None:
         stat = UserStat(user_id=current_user.id, success=[], failed=[])
@@ -51,9 +51,6 @@ def update_user_stat():
 
     stat.success = success
     stat.failed = failed
-
-    app.logger.error(stat.success)
-    app.logger.error(stat.failed)
 
     db.session.add(stat)
     db.session.commit()
