@@ -1,8 +1,7 @@
 from . import db
-from typing import List
 import datetime
-from sqlalchemy import Integer, String, ForeignKey, JSON, Date, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Integer, String, ForeignKey, Date
+from sqlalchemy.orm import Mapped, mapped_column
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -27,5 +26,5 @@ class UserStat(db.Model):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     recorded_at: Mapped[datetime.date] = mapped_column(Date(), default=datetime.date.today)
 
-    success: Mapped[List['int']] = mapped_column(JSON)
-    failed: Mapped[List['int']] = mapped_column(JSON)
+    success: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    failed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

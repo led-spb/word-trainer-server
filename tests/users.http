@@ -14,6 +14,8 @@ Authorization: Bearer {{ auth.access_token }}
 # @ref auth
 PUT http://localhost:5000/api/user/stat
 Authorization: Bearer {{ auth.access_token }}
+Content-Type: application/json
+
 {
     "success": [],
     "failed": []

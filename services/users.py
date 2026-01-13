@@ -1,10 +1,10 @@
-from typing import Union, List, Tuple
+from typing import Union, List
 from models import db
 from models.user import User, UserStat
-from models.word import Word
+from models.word import WordStatistics, Word
 from datetime import date, timedelta
-from sqlalchemy import func, cast, Integer, desc, column
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import cast, Numeric, desc, and_
+from sqlalchemy.orm import joinedload
 
 
 class UserService:
@@ -24,63 +24,65 @@ class UserService:
 class UserStatService:
 
     @classmethod
-    def get_user_failed_words(cls, user: User, days :int, count :int) -> List[Tuple[Word, int]]:
-        failed_query = db.select(
-            func.jsonb_array_elements(
-                cast(UserStat.failed, JSONB)
-            ).label('word_id').cast(Integer),
-            func.count().label('frequency')
+    def get_user_word_failed(cls, user: User, count :int) -> List[WordStatistics]:
+        query = db.select(
+            WordStatistics
+        ).options(
+            joinedload(WordStatistics.word)
         ).filter(
-            UserStat.user_id == user.id
+            WordStatistics.user_id == user.id
         ).filter(
-            UserStat.recorded_at >= date.today() - timedelta(days=days)
-        ).group_by('word_id').order_by(
-            desc('frequency')
-        ).limit(count).subquery()
+            WordStatistics.failed > 0
+        ).order_by(
+            cast(WordStatistics.success, Numeric) / (WordStatistics.success + WordStatistics.failed)
+        ).order_by(
+            desc(WordStatistics.failed)
+        ).limit(count)
 
-        words_query = db.select(
-            Word, 
-            failed_query.c.frequency
-        ).join(failed_query, Word.id == failed_query.c.word_id)
-
-        return db.session.execute(words_query).all()
+        return db.session.execute(query).scalars()
 
 
     @classmethod
-    def get_user_stats(cls, user: User, days :int):
-        stat_query = db.select(
-            UserStat.user_id,
-            UserStat.recorded_at,
-            func.jsonb_array_elements(
-                cast(UserStat.success, JSONB)
-            ).label('success_id').cast(Integer),
-            func.jsonb_array_elements(
-                cast(UserStat.failed, JSONB)
-            ).label('failed_id').cast(Integer)
+    def get_user_stats(cls, user: User, days :int) -> List[UserStat]:
+        query = db.select(UserStat
         ).filter(
             UserStat.user_id == user.id
         ).filter(
             UserStat.recorded_at >= date.today() - timedelta(days=days)
-        ).subquery()
-
-        query = db.select(
-            User.id, 
-            stat_query.c.recorded_at,
-            func.count(stat_query.c.success_id).label('success'),
-            func.count(stat_query.c.failed_id).label('failed')
-        ).join(
-            stat_query, User.id == stat_query.c.user_id
-        ).group_by(
-            User.id,
-            stat_query.c.recorded_at
         )
-
-        return db.session.execute(query).all()
+        return db.session.execute(query).scalars()
         
 
     @classmethod
     def update_user_stat(cls, user: User, success: List[int], failed: List[int]) -> None:
-        stat = db.session.execute(
+        word_stats = db.session.execute(
+            db.select(
+                Word, WordStatistics
+            ).outerjoin(
+                WordStatistics,
+                and_(
+                    Word.id == WordStatistics.word_id,
+                    WordStatistics.user_id == user.id
+                )
+            ).filter(
+                Word.id.in_(success + failed)
+            )
+        )
+        total_success = 0
+        total_failed = 0
+
+        for word, stat in word_stats:
+            if stat is None:
+                stat = WordStatistics(word_id=word.id, user_id=user.id, success=0, failed=0)
+            if word.id in success:
+                stat.success += 1
+                total_success += 1
+            if word.id in failed:
+                stat.failed += 1
+                total_failed += 1
+            db.session.add(stat)
+
+        user_stat = db.session.execute(
             db.select(
                 UserStat
             ).filter(
@@ -90,12 +92,12 @@ class UserStatService:
             )
         ).scalar_one_or_none()
 
-        if stat is None:
-            stat = UserStat(user_id=user.id, success=success, failed=failed)
+        if user_stat is None:
+           user_stat = UserStat(user_id=user.id, success=total_success, failed=total_failed)
         else:
-            stat.success = stat.success + success
-            stat.failed = stat.failed + failed
+           user_stat.success += total_success
+           user_stat.failed += total_failed
 
-        db.session.add(stat)
+        db.session.add(user_stat)
         db.session.commit()
         return None

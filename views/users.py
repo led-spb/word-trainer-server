@@ -20,7 +20,12 @@ def get_user_info():
 
 class WordStatSchema(Schema):
     word = fields.Nested(WordSchema)
-    frequency = fields.Int()
+    success = fields.Int()
+    failed = fields.Int()
+    precent = fields.Method("get_precent")
+
+    def get_precent(self, obj):
+        return obj.success / (obj.success + obj.failed)
 
 class DayStatSchema(Schema):
     recorded_at = fields.Date()
@@ -39,14 +44,11 @@ class UpdateUserStateSchema(Schema):
 @users.route('/stat', methods=['GET'])
 @jwt_required()
 def get_user_stat():
-    failed_words = UserStatService.get_user_failed_words(current_user, days=14, count=10)
-    failed = [dict(word=word, frequency=frequency) for (word, frequency) in failed_words]
-
+    failed_words = UserStatService.get_user_word_failed(current_user, count=10)
     stats = UserStatService.get_user_stats(current_user, days=14)
 
-    app.logger.error(f'{type(failed)}, {failed}')
     return UserStatSchema().dump({
-        'failed': failed,
+        'failed': failed_words,
         'days': stats
     })
 
