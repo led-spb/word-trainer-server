@@ -8,6 +8,7 @@ from sqlalchemy.orm import joinedload
 
 
 class UserService:
+
     @classmethod
     def get_user_by_id(cls, id :int) -> Union[User, None]:
         return db.session.execute(

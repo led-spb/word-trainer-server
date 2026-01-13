@@ -1,8 +1,8 @@
 from typing import List
 from models import db
 from models.user import User
-from models.word import Word, Spelling
-from sqlalchemy import func
+from models.word import Word, WordStatistics
+from sqlalchemy import func, and_, nulls_first
 from sqlalchemy.orm import joinedload, selectinload
 
 
@@ -13,7 +13,13 @@ class TaskService:
         query = db.select(
             Word
         ).options(
-            selectinload(Word.spellings)
+            joinedload(Word.spellings)
+        ).outerjoin(
+            WordStatistics,
+            and_(
+                Word.id == WordStatistics.word_id,
+                WordStatistics.user_id == user.id
+            )
         ).filter(
             Word.spellings.any()
         ).filter(
@@ -21,8 +27,8 @@ class TaskService:
         ).filter(
             Word.level <= max_level
         ).order_by(
-            func.random()
+            nulls_first(WordStatistics.failed+WordStatistics.success), func.random()
         ).limit(
             count
         )
-        return db.session.execute(query).scalars()
+        return db.session.execute(query).unique().scalars()
