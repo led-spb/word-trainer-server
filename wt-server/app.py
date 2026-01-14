@@ -23,9 +23,6 @@ def create_app(config_filename='config.py'):
     from .models import db
     db.init_app(app)
 
-    from .api import create_api
-    create_api(app)
-
     @app.cli.command("init-db")
     def init_db():
         db.create_all()
@@ -41,5 +38,8 @@ def create_app(config_filename='config.py'):
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
+
+    from .api import create_api
+    create_api(app)
 
     return app

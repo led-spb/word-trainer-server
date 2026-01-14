@@ -1,0 +1,18 @@
+# @import ./auth.http
+
+###
+# @ref auth
+POST http://localhost:5000/api/accents/import
+Authorization: Bearer {{ auth.access_token }}
+Content-Type: application/json
+
+{
+  "level": 6,
+  "words": ["кОлокол"]
+}
+
+
+###
+# @ref auth
+GET http://localhost:5000/api/accents/task?min=7&max=10&count=10
+Authorization: Bearer {{ auth.access_token }}

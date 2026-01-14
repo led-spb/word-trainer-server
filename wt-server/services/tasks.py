@@ -54,3 +54,18 @@ class TaskService:
 
         words += db.session.execute(query).unique().scalars()
         return words
+
+    @classmethod
+    def get_user_accent_task(cls, user :User, count: int = 20, min_level :int = 0, max_level :int = 10) -> List[Word]:
+        words = []
+
+        query = db.select(Word).options(joinedload(Word.accents)).filter(
+            Word.accents.any()
+        ).order_by(
+            func.random()
+        ).limit(
+            count 
+        )
+
+        words += db.session.execute(query).unique().scalars()
+        return words
