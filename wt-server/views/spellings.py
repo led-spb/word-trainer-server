@@ -1,6 +1,6 @@
 from flask import Blueprint, request
-from models.word import db, Word, Spelling
-from services.tasks import TaskService
+from ..models.word import db, Word, Spelling
+from ..services.tasks import TaskService
 from sqlalchemy import func
 from marshmallow import Schema, fields
 from flask_jwt_extended import jwt_required, current_user

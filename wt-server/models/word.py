@@ -13,7 +13,8 @@ class Word(db.Model):
     context: Mapped[str] = mapped_column(String(500), nullable=True)
     description: Mapped[str] = mapped_column(String(1000), nullable=True)
 
-    spellings: Mapped[List["Spelling"]] = relationship(cascade='all,delete')
+    spellings: Mapped[List['Spelling']] = relationship(cascade='all,delete')
+    accents: Mapped[List['Accent']] = relationship(cascade='all,delete')
 
 
 class Spelling(db.Model):
@@ -24,6 +25,15 @@ class Spelling(db.Model):
     position: Mapped[int] = mapped_column(nullable=False)
     length: Mapped[int] = mapped_column(nullable=False)
     variants: Mapped[List['str']] = mapped_column(JSON)
+
+
+class Accent(db.Model):
+    __tablename__ = 'accents'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    word_id: Mapped[int] = mapped_column(ForeignKey("words.id"))
+    position: Mapped[int] = mapped_column(nullable=False)
+    variants: Mapped[List['int']] = mapped_column(JSON)
 
 
 class WordStatistics(db.Model):

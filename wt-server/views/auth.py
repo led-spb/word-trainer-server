@@ -1,4 +1,4 @@
-from services.users import UserService
+from ..services.users import UserService
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, create_refresh_token, set_access_cookies, unset_access_cookies
 from marshmallow import Schema, fields

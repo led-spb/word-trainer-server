@@ -1,7 +1,7 @@
 from typing import Union, List
-from models import db
-from models.user import User, UserStat
-from models.word import WordStatistics, Word
+from ..models import db
+from ..models.user import User, UserStat
+from ..models.word import WordStatistics, Word
 from datetime import date, timedelta
 from sqlalchemy import cast, Numeric, desc, and_
 from sqlalchemy.orm import joinedload

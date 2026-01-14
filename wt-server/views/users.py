@@ -1,6 +1,5 @@
 from flask import Blueprint, jsonify, request, current_app as app
-
-from services.users import UserStatService
+from ..services.users import UserStatService
 from marshmallow import Schema, fields
 from flask_jwt_extended import jwt_required, current_user
 from .words import WordSchema

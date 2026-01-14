@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from models.word import db, Word
+from ..models.word import db, Word
 from marshmallow import Schema, fields
 
 

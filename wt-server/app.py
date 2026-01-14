@@ -1,11 +1,11 @@
 from flask import Flask
 from flask_jwt_extended import JWTManager
-from views.auth import user_identity_lookup, user_lookup
+from .views.auth import user_identity_lookup, user_lookup
 import click
 
 
 def create_app(config_filename='config.py'):
-    app = Flask(__name__, static_url_path='/')
+    app = Flask(__name__)
 
     jwt = JWTManager(app)
 
@@ -20,15 +20,11 @@ def create_app(config_filename='config.py'):
 
     app.config.from_pyfile(config_filename)
 
-    from models import db
+    from .models import db
     db.init_app(app)
 
-    from api import create_api
+    from .api import create_api
     create_api(app)
-
-    @app.route('/', defaults={'path': ''})
-    def root(path):
-        return app.send_static_file('index.html')
 
     @app.cli.command("init-db")
     def init_db():
@@ -39,7 +35,7 @@ def create_app(config_filename='config.py'):
     @click.option('--name', help='User name')
     @click.option('--password', help='User password')
     def create_user(name, password):
-        from models.user import User
+        from .models.user import User
 
         user = User(name=name)
         user.set_password(password)

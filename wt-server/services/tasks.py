@@ -1,7 +1,7 @@
 from typing import List
-from models import db
-from models.user import User
-from models.word import Word, WordStatistics
+from ..models import db
+from ..models.user import User
+from ..models.word import Word, WordStatistics
 from sqlalchemy import func, and_, nulls_first
 from sqlalchemy.orm import joinedload, selectinload
 
