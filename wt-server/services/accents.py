@@ -27,9 +27,11 @@ class AccentService:
         query = db.select(Word).options(
             joinedload(Word.accents)
         ).outerjoin(
-            WordStatistics
-        ).filter(
-            WordStatistics.user_id == user.id
+            WordStatistics,
+            and_(
+                Word.id == WordStatistics.word_id,
+                WordStatistics.user_id == user.id
+            )
         ).filter(
             Word.accents.any()
         ).filter(

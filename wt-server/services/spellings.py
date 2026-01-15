@@ -2,6 +2,7 @@ from typing import List
 from ..models import db
 from ..models.user import User
 from ..models.word import Word, WordStatistics
+from sqlalchemy import and_
 from sqlalchemy.orm import joinedload
 
 
@@ -25,9 +26,11 @@ class SpellingService:
         query = db.select(Word).options(
             joinedload(Word.spellings)
         ).outerjoin(
-            WordStatistics
-        ).filter(
-            WordStatistics.user_id == user.id
+            WordStatistics,
+            and_(
+                Word.id == WordStatistics.word_id,
+                WordStatistics.user_id == user.id
+            )
         ).filter(
             Word.spellings.any()
         ).filter(
