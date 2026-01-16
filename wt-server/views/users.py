@@ -52,6 +52,31 @@ def get_user_stat():
     })
 
 
+class UserRatingSchema(Schema):
+    user = fields.Nested(UserSchema)
+    success = fields.Integer()
+    failed = fields.Integer()
+
+
+@users.route('/rating', methods=['GET'])
+@jwt_required()
+def get_rating():
+    days = min(request.args.get('days', 7, type=int), 90)
+    count = min(request.args.get('count', 5, type=int), 10)
+    
+    stat = UserStatService.get_users_with_aggregate_stat(days=days, count=count)
+    return UserRatingSchema().dump(
+        [
+            dict(
+                user=user, 
+                success=success,
+                failed=failed
+            ) 
+            for (user, success, failed) in stat 
+        ],
+        many=True
+    )
+
 @users.route('/stat', methods=['PUT'])
 @jwt_required()
 def update_user_stat():

@@ -3,7 +3,7 @@ from ..models import db
 from ..models.user import User, UserStat
 from ..models.word import WordStatistics, Word
 from datetime import date, timedelta
-from sqlalchemy import cast, Numeric, desc, and_
+from sqlalchemy import func, cast, Numeric, desc, and_, nulls_last
 from sqlalchemy.orm import joinedload
 
 
@@ -14,7 +14,7 @@ class UserService:
         return db.session.execute(
             db.select(User).filter(User.id == id)
         ).scalar_one_or_none()
-    
+
     @classmethod
     def get_user_by_login(cls, login :str) -> Union[User, None]:
         return db.session.execute(
@@ -42,7 +42,6 @@ class UserStatService:
 
         return db.session.execute(query).scalars()
 
-
     @classmethod
     def get_user_stats(cls, user: User, days :int) -> List[UserStat]:
         query = db.select(UserStat
@@ -52,7 +51,7 @@ class UserStatService:
             UserStat.recorded_at >= date.today() - timedelta(days=days)
         )
         return db.session.execute(query).scalars()
-        
+
 
     @classmethod
     def update_user_stat(cls, user: User, success: List[int], failed: List[int]) -> None:
@@ -102,3 +101,27 @@ class UserStatService:
         db.session.add(user_stat)
         db.session.commit()
         return None
+
+    @classmethod
+    def get_users_with_aggregate_stat(cls, days :int, count :int = 5) -> List[tuple[User, int, int]]:
+        agg_stat = db.select(
+            UserStat.user_id,
+            func.sum(UserStat.success).label('success'),
+            func.sum(UserStat.failed).label('failed'), 
+            func.sum(UserStat.success + UserStat.failed).label('total'),
+        ).filter(
+            UserStat.recorded_at >= date.today() - timedelta(days=days)
+        ).group_by(
+            UserStat.user_id
+        ).subquery()
+
+        query = db.select(
+            User, func.coalesce(agg_stat.c.success, 0), func.coalesce(agg_stat.c.failed,0)
+        ).outerjoin(
+            agg_stat, agg_stat.c.user_id == User.id
+        ).order_by(
+            nulls_last(desc(agg_stat.c.success / func.nullif(agg_stat.c.total, 0))),
+            agg_stat.c.total.desc(),
+        ).limit(count)
+
+        return db.session.execute(query).all()

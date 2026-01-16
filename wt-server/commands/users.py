@@ -23,6 +23,7 @@ def create_user(name=None):
     db.session.add(user)
     db.session.commit()
 
+
 @user_commands.command('password', help='Change user password')
 @click.argument('name', default=None)
 def reset_password(name=None):

@@ -28,7 +28,7 @@ class SpellingService:
         ).outerjoin(
             WordStatistics,
             and_(
-                Word.id == WordStatistics.word_id,
+                WordStatistics.word_id == Word.id,
                 WordStatistics.user_id == user.id
             )
         ).filter(
