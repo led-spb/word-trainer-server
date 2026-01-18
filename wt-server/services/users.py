@@ -3,7 +3,7 @@ from ..models import db
 from ..models.user import User, UserStat
 from ..models.word import WordStatistics, Word
 from datetime import date, timedelta
-from sqlalchemy import func, cast, Numeric, desc, and_, nulls_last
+from sqlalchemy import func, case, cast, Numeric, desc, and_, nulls_last
 from sqlalchemy.orm import joinedload
 
 
@@ -103,12 +103,15 @@ class UserStatService:
         return None
 
     @classmethod
-    def get_users_with_aggregate_stat(cls, days :int, count :int = 5) -> List[tuple[User, int, int]]:
+    def get_users_with_aggregate_stat(cls, days :int, count :int = 5) -> List[tuple[User, int, int, int]]:
         agg_stat = db.select(
             UserStat.user_id,
             func.sum(UserStat.success).label('success'),
             func.sum(UserStat.failed).label('failed'), 
-            func.sum(UserStat.success + UserStat.failed).label('total'),
+            case(
+                (func.sum(UserStat.success + UserStat.failed) >= 100, func.sum(UserStat.success + UserStat.failed)),
+                else_=0
+            ).label('total'),
         ).filter(
             UserStat.recorded_at >= date.today() - timedelta(days=days)
         ).group_by(
@@ -116,7 +119,11 @@ class UserStatService:
         ).subquery()
 
         query = db.select(
-            User, func.coalesce(agg_stat.c.success, 0), func.coalesce(agg_stat.c.failed,0)
+            User,
+            func.coalesce(agg_stat.c.success, 0),
+            func.coalesce(agg_stat.c.failed,0),
+            func.coalesce(agg_stat.c.total, 0)
+            
         ).outerjoin(
             agg_stat, agg_stat.c.user_id == User.id
         ).order_by(

@@ -2,7 +2,6 @@ from flask import Blueprint, jsonify, request, current_app as app
 from ..services.users import UserStatService
 from marshmallow import Schema, fields
 from flask_jwt_extended import jwt_required, current_user
-from .words import WordSchema
 
 
 users = Blueprint('users', __name__)
@@ -16,6 +15,22 @@ class UserSchema(Schema):
 @jwt_required()
 def get_user_info():
     return UserSchema().dump(current_user)
+
+class AccentSchema(Schema):
+    position = fields.Int()
+
+class SpellingSchema(Schema):
+    position = fields.Int()
+    length = fields.Int()
+
+class WordSchema(Schema):
+    id = fields.Int(dump_only=True, required=True)
+    fullword = fields.Str(required=True)
+    context = fields.Str()
+    description = fields.Str()
+    level = fields.Int(required=True)
+    spellings = fields.Nested(SpellingSchema, many=True)
+    accents = fields.Pluck(AccentSchema, 'position', many=True)
 
 class WordStatSchema(Schema):
     word = fields.Nested(WordSchema)
@@ -56,6 +71,7 @@ class UserRatingSchema(Schema):
     user = fields.Nested(UserSchema)
     success = fields.Integer()
     failed = fields.Integer()
+    total = fields.Integer()
 
 
 @users.route('/rating', methods=['GET'])
@@ -70,9 +86,10 @@ def get_rating():
             dict(
                 user=user, 
                 success=success,
-                failed=failed
+                failed=failed,
+                total=total
             ) 
-            for (user, success, failed) in stat 
+            for (user, success, failed, total) in stat 
         ],
         many=True
     )

@@ -1,7 +1,7 @@
 from . import db
 import datetime
-from sqlalchemy import Integer, String, ForeignKey, Date
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Integer, String, ForeignKey, Date, DateTime
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -9,7 +9,7 @@ class User(db.Model):
     __tablename__ = 'users'
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String(64), nullable=False)
+    name: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
     password_hash: Mapped[str] = mapped_column(String(512), nullable=False)
 
     def set_password(self, password):
@@ -28,3 +28,14 @@ class UserStat(db.Model):
 
     success: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     failed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
+class Invite(db.Model):
+    __tablename__ = 'invites'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    hash: Mapped[str] = mapped_column(String(64), nullable=True, unique=True)
+    lifetime: Mapped[datetime.datetime] = mapped_column(DateTime(), nullable=False)
+    registered_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=True)
+
+    registered_user: Mapped[User] = relationship()

@@ -4,7 +4,6 @@ from ..models import db, order_random, nulls_first
 from ..models.word import Word, Accent, WordStatistics
 from ..services.words import WordService
 from ..services.accents import AccentService
-from .words import WordSchema
 from flask_jwt_extended import jwt_required, current_user
 
 
@@ -18,11 +17,16 @@ class AccentImportSchema(Schema):
 class AccentPositionSchema(Schema):
     position = fields.Int()
     
-class AccentSchema(WordSchema):
+class WordAccentAccentSchema(Schema):
+    id = fields.Int(dump_only=True, required=True)
+    fullword = fields.Str(required=True)
+    context = fields.Str()
+    description = fields.Str()
+    level = fields.Int(required=True)
     accents = fields.Pluck(AccentPositionSchema, 'position', many=True)
 
 class AccentImportResultSchema(Schema):
-    results = fields.Nested(AccentSchema, many=True)
+    results = fields.Nested(WordAccentAccentSchema, many=True)
 
 
 #@accents.route('/import', methods=['POST'])
@@ -64,7 +68,7 @@ def prepare_task():
     failed = AccentService.get_with_user_stats(
         user=current_user, 
         filters=[
-            WordStatistics.failed >0, 
+            WordStatistics.failed > 0, 
             Word.level >= min_level,
             Word.level <= max_level
         ],
@@ -86,4 +90,4 @@ def prepare_task():
         count=count - len(failed)
     )
 
-    return AccentSchema().dump(failed+new, many=True)
+    return WordAccentAccentSchema().dump(failed+new, many=True)
