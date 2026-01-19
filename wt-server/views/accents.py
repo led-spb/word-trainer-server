@@ -61,16 +61,14 @@ def import_accent():
 @accents.route('/task', methods=['GET'])
 @jwt_required()
 def prepare_task():
-    min_level = request.args.get('min', 1, type=int)
-    max_level = request.args.get('max', 10, type=int)
+    level = request.args.get('level', 10, type=int)
     count = min(request.args.get('count', 20, type=int), 50)
 
     failed = AccentService.get_with_user_stats(
         user=current_user, 
         filters=[
-            WordStatistics.failed > 0, 
-            Word.level >= min_level,
-            Word.level <= max_level
+            WordStatistics.failed > 0,
+            Word.level <= level,
         ],
         order_by=[order_random],
         count=count//5
@@ -79,9 +77,8 @@ def prepare_task():
     new = AccentService.get_with_user_stats(
         user=current_user,
         filters=[
-            Word.level >= min_level,
-            Word.level <= max_level,
-            Word.id.notin_([failed.id for failed in failed])
+            Word.level <= level,
+            Word.id.notin_([failed.id for failed in failed]),
         ],
         order_by=[
             nulls_first(WordStatistics.success + WordStatistics.failed), 

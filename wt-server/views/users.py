@@ -22,6 +22,7 @@ class AccentSchema(Schema):
 class SpellingSchema(Schema):
     position = fields.Int()
     length = fields.Int()
+    variants = fields.List(fields.String())
 
 class WordSchema(Schema):
     id = fields.Int(dump_only=True, required=True)
