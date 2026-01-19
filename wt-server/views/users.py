@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app as app
 from ..services.users import UserStatService
+from ..services.words import WordService
 from marshmallow import Schema, fields
 from flask_jwt_extended import jwt_required, current_user
 
@@ -69,14 +70,13 @@ class UpdateUserStateSchema(Schema):
 def get_user_stat():
     failed_words = UserStatService.get_user_word_failed(current_user, count=10)
     stats = UserStatService.get_user_stats(current_user, days=14)
-    total_words, user_words = UserStatService.get_user_learned_stat(current_user)
 
     return UserStatSchema().dump({
         'failed': failed_words,
         'days': stats,
         'progress': {
-            'learned': user_words,
-            'total': total_words,
+            'learned': UserStatService.get_user_progress(current_user),
+            'total': WordService.get_total_words_count(),
         }
     })
 
@@ -86,6 +86,8 @@ class UserRatingSchema(Schema):
     success = fields.Integer()
     failed = fields.Integer()
     total = fields.Integer()
+    progress = fields.Integer()
+    progress_pct = fields.Float()
 
 
 @users.route('/rating', methods=['GET'])
@@ -93,17 +95,21 @@ class UserRatingSchema(Schema):
 def get_rating():
     days = min(request.args.get('days', 7, type=int), 90)
     count = min(request.args.get('count', 5, type=int), 10)
-    
+
     stat = UserStatService.get_users_with_aggregate_stat(days=days, count=count)
+    total_words = WordService.get_total_words_count()
+
     return UserRatingSchema().dump(
         [
             dict(
-                user=user, 
+                user=user,
                 success=success,
                 failed=failed,
-                total=total
-            ) 
-            for (user, success, failed, total) in stat 
+                total=total,
+                progress=progress,
+                progress_pct=progress/total_words,
+            )
+            for (user, success, failed, total, progress, ) in stat
         ],
         many=True
     )
@@ -115,8 +121,8 @@ def update_user_stat():
         request.get_json()
     )
     UserStatService.update_user_stat(
-        current_user, 
-        success=data.get('success', []), 
+        current_user,
+        success=data.get('success', []),
         failed=data.get('failed', [])
     )
     return '', 204

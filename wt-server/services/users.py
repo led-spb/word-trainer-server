@@ -103,7 +103,7 @@ class UserStatService:
         return None
 
     @classmethod
-    def get_users_with_aggregate_stat(cls, days :int, count :int = 5) -> List[tuple[User, int, int, int]]:
+    def get_users_with_aggregate_stat(cls, days :int, count :int = 5) -> List[tuple[User, int, int, int, int]]:
         agg_stat = db.select(
             UserStat.user_id,
             func.sum(UserStat.success).label('success'),
@@ -118,15 +118,27 @@ class UserStatService:
             UserStat.user_id
         ).subquery()
 
+        progress_stat = db.select(
+            WordStatistics.user_id,
+            func.count().label('progress'),
+        ).filter(
+            WordStatistics.success / (WordStatistics.failed+WordStatistics.success) > 0.75
+        ).group_by(
+            WordStatistics.user_id
+        ).subquery()
+
         query = db.select(
             User,
             func.coalesce(agg_stat.c.success, 0),
             func.coalesce(agg_stat.c.failed,0),
-            func.coalesce(agg_stat.c.total, 0)
-            
+            func.coalesce(agg_stat.c.total, 0),
+            func.coalesce(progress_stat.c.progress, 0),            
         ).outerjoin(
             agg_stat, agg_stat.c.user_id == User.id
+        ).outerjoin(
+            progress_stat, progress_stat.c.user_id == User.id
         ).order_by(
+            progress_stat.c.progress.desc(),
             nulls_last(desc(agg_stat.c.success / func.nullif(agg_stat.c.total, 0))),
             agg_stat.c.total.desc(),
         ).limit(count)
@@ -135,11 +147,7 @@ class UserStatService:
 
 
     @classmethod
-    def get_user_learned_stat(cls, user: User) -> tuple[int, int]:
-        total_words, = db.session.execute(
-            db.select(func.count(Word.id))
-        ).one_or_none()
-
+    def get_user_progress(cls, user: User) -> int:
         user_words, = db.session.execute(
             db.select(
                 func.count(WordStatistics.word_id)
@@ -149,4 +157,4 @@ class UserStatService:
             )
         ).one_or_none()
 
-        return total_words, user_words
+        return user_words
