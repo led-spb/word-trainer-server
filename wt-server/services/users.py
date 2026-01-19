@@ -132,3 +132,21 @@ class UserStatService:
         ).limit(count)
 
         return db.session.execute(query).all()
+
+
+    @classmethod
+    def get_user_learned_stat(cls, user: User) -> tuple[int, int]:
+        total_words, = db.session.execute(
+            db.select(func.count(Word.id))
+        ).one_or_none()
+
+        user_words, = db.session.execute(
+            db.select(
+                func.count(WordStatistics.word_id)
+            ).filter(
+                WordStatistics.user_id == user.id,
+                WordStatistics.success / (WordStatistics.failed + WordStatistics.success) > 0.75
+            )
+        ).one_or_none()
+
+        return total_words, user_words

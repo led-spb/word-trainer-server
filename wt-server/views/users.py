@@ -33,23 +33,31 @@ class WordSchema(Schema):
     spellings = fields.Nested(SpellingSchema, many=True)
     accents = fields.Pluck(AccentSchema, 'position', many=True)
 
-class WordStatSchema(Schema):
-    word = fields.Nested(WordSchema)
+class StatisticSchema(Schema):
     success = fields.Int()
     failed = fields.Int()
+    total = fields.Method("get_total")
     precent = fields.Method("get_precent")
 
+    def get_total(self, obj):
+        return obj.success + obj.failed
+
     def get_precent(self, obj):
-        return obj.success / (obj.success + obj.failed)
+        return obj.success / self.get_total(obj)
 
-class DayStatSchema(Schema):
+class WordStatSchema(StatisticSchema):
+    word = fields.Nested(WordSchema)
+
+class DayStatSchema(StatisticSchema):
     recorded_at = fields.Date()
-    success = fields.Int()
-    failed = fields.Int()
 
+class ProgressSchema(Schema):
+    total = fields.Integer()
+    learned = fields.Integer()
 class UserStatSchema(Schema):
     failed = fields.Nested(WordStatSchema, many=True)
     days = fields.Nested(DayStatSchema, many=True)
+    progress = fields.Nested(ProgressSchema)
 
 class UpdateUserStateSchema(Schema):
     failed = fields.List(fields.Int)
@@ -61,10 +69,15 @@ class UpdateUserStateSchema(Schema):
 def get_user_stat():
     failed_words = UserStatService.get_user_word_failed(current_user, count=10)
     stats = UserStatService.get_user_stats(current_user, days=14)
+    total_words, user_words = UserStatService.get_user_learned_stat(current_user)
 
     return UserStatSchema().dump({
         'failed': failed_words,
-        'days': stats
+        'days': stats,
+        'progress': {
+            'learned': user_words,
+            'total': total_words,
+        }
     })
 
 
