@@ -5,11 +5,12 @@ from sqlalchemy import func
 class WordService:
 
     @classmethod
-    def find_by_name(cls, word_name: str) -> Word:
+    def find_by_name(cls, word_name: str, context :str = None) -> Word:
         query = db.select(
             Word
         ).filter(
-            Word.fullword == word_name
+            Word.fullword == word_name,
+            context is None or Word.context == context
         )
         return db.session.execute(query).scalar_one_or_none()
 

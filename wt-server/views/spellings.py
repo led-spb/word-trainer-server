@@ -1,10 +1,9 @@
 from flask import Blueprint, request
-from ..models import db, nulls_first, order_random
+from ..models import db, nulls_first, order_random, order_desc
 from ..models.word import db, Word, Spelling, WordStatistics
 from ..services.spellings import SpellingService
 from marshmallow import Schema, fields
 from flask_jwt_extended import jwt_required, current_user
-
 
 spellings = Blueprint('spellings', __name__)
 
@@ -30,6 +29,7 @@ class WordSpellingSchema(Schema):
 def prepare_task():
     level = request.args.get('level', 10, type=int)
     count = min(request.args.get('count', 20, type=int), 50)
+    errors = min(request.args.get('errors', 0, type=int), count)
 
     failed = SpellingService.get_with_user_stats(
         user=current_user, 
@@ -37,8 +37,8 @@ def prepare_task():
             WordStatistics.failed >0, 
             Word.level <= level,
         ],
-        order_by=[order_random],
-        count=count//5
+        order_by=[WordStatistics.success/WordStatistics.failed, order_desc(WordStatistics.failed), order_random()],
+        count=errors
     )
 
     new = SpellingService.get_with_user_stats(
@@ -49,7 +49,7 @@ def prepare_task():
         ],
         order_by=[
             nulls_first(WordStatistics.success + WordStatistics.failed), 
-            order_random
+            order_random()
         ],
         count=count - len(failed)
     )

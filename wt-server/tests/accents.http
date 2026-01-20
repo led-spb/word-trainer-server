@@ -1,16 +1,5 @@
 # @import ./auth.http
 
-###
-# @ref auth
-POST http://localhost:5000/api/accents/import
-Authorization: Bearer {{ auth.access_token }}
-Content-Type: application/json
-
-{
-  "level": 6,
-  "words": ["кОлокол"]
-}
-
 
 ###
 # @ref auth

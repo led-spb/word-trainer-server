@@ -9,7 +9,7 @@ from sqlalchemy.orm import joinedload
 class SpellingService:
 
     @classmethod
-    def find_by_word(cls, word: str) -> List[Word]:
+    def find_by_word(cls, word: str, context :str = None) -> List[Word]:
         query = db.select(
             Word
         ).options(
@@ -17,7 +17,8 @@ class SpellingService:
         ).filter(
             Word.spellings.any()
         ).filter(
-            Word.fullword == word.lower()
+            Word.fullword == word.lower(),
+            context is None or Word.context == context,
         )
         return db.session.execute(query).scalars().all()
 
