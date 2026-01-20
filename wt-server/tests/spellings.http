@@ -4,3 +4,4 @@
 # @ref auth
 GET http://localhost:5000/api/spellings/task?min=7&max=10&count=10
 Authorization: Bearer {{ auth.access_token }}
+

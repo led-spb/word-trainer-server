@@ -2,6 +2,7 @@ from flask import Blueprint, request
 from ..models import db, nulls_first, order_random, order_desc
 from ..models.word import db, Word, Spelling, WordStatistics
 from ..services.spellings import SpellingService
+from ..services.words import WordService
 from marshmallow import Schema, fields
 from flask_jwt_extended import jwt_required, current_user
 
