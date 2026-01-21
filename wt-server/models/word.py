@@ -12,6 +12,7 @@ class Word(db.Model):
     fullword: Mapped[str] = mapped_column(String(50), nullable=False, name='full_word')
     context: Mapped[str] = mapped_column(String(500), nullable=True)
     description: Mapped[str] = mapped_column(String(1000), nullable=True)
+    tags: Mapped[List['int']] = mapped_column(JSON, nullable=True)
 
     spellings: Mapped[List['Spelling']] = relationship(cascade='all,delete')
     accents: Mapped[List['Accent']] = relationship(cascade='all,delete')
@@ -45,3 +46,9 @@ class WordStatistics(db.Model):
     failed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     word: Mapped[Word] = relationship()
+
+class Tag(db.Model):
+    __tablename__ = 'tags'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    desciption: Mapped[str] = mapped_column(String(250), nullable=False)

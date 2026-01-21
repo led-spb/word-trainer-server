@@ -48,7 +48,7 @@ def prepare_task():
         ],
         order_by=[
             nulls_first(WordStatistics.success + WordStatistics.failed), 
-            order_random
+            order_random()
         ],
         count=count - len(failed)
     )
