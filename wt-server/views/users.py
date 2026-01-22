@@ -1,4 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app as app
+from ..models import db
+from ..models.user import UserReport
 from ..services.users import UserStatService
 from ..services.words import WordService
 from marshmallow import Schema, fields
@@ -125,4 +127,25 @@ def update_user_stat():
         success=data.get('success', []),
         failed=data.get('failed', [])
     )
+    return '', 204
+
+class UserReportSchema(Schema):
+    word = fields.Int(required=True)
+
+@users.route('/report', methods=['PUT'])
+@jwt_required()
+def put_user_report():
+    data = UserReportSchema().load(
+        request.get_json()
+    )
+
+    if current_user.reports is None:
+        current_user.reports = UserReport(user_id=current_user.id, reports=[])
+
+    report = current_user.reports
+    report.reports = list(set(report.reports + [data.get('word')]))
+
+    db.session.add(current_user)
+    db.session.commit()
+
     return '', 204

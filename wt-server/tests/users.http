@@ -26,3 +26,11 @@ Content-Type: application/json
     "success": [],
     "failed": []
 }
+
+###
+# @ref auth
+PUT http://localhost:5000/api/user/report
+Authorization: Bearer {{ auth.access_token }}
+Content-Type: application/json
+
+{ "word": 1}

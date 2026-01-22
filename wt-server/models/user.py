@@ -1,6 +1,8 @@
 from . import db
 import datetime
+from typing import List
 from sqlalchemy import Integer, String, ForeignKey, Date, DateTime
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -17,7 +19,8 @@ class User(db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-
+    reports: Mapped['UserReport'] = relationship()
+    
 
 class UserStat(db.Model):
     __tablename__ = 'users_stat'
@@ -39,3 +42,10 @@ class Invite(db.Model):
     registered_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=True)
 
     registered_user: Mapped[User] = relationship()
+
+
+class UserReport(db.Model):
+    __tablename__ = 'user_reports'
+
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), primary_key=True)
+    reports: Mapped[List['int']] = mapped_column(JSONB, nullable=True)

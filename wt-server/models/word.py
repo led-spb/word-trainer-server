@@ -60,3 +60,10 @@ class Tag(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     desciption: Mapped[str] = mapped_column(String(250), nullable=False)
     type: Mapped[TaskTypeEnum] = mapped_column(String(20), nullable=False)
+
+
+class Rule(db.Model):
+    __tablename__ = 'rules'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    description: Mapped[str] = mapped_column(String, nullable=False)
