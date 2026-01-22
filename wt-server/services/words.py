@@ -1,5 +1,6 @@
+from typing import List
 from ..models import db
-from ..models.word import Word
+from ..models.word import Word, Tag
 from sqlalchemy import func
 
 class WordService:
@@ -21,3 +22,11 @@ class WordService:
         ).one_or_none()
 
         return total_words
+
+    @classmethod
+    def get_tags_dictonary(cls) -> List[Tag]:
+        tags = db.session.execute(
+            db.select(Tag)
+        ).scalars().all()
+
+        return tags

@@ -29,12 +29,14 @@ def prepare_task():
     level = request.args.get('level', 10, type=int)
     count = min(request.args.get('count', 20, type=int), 50)
     errors = min(request.args.get('errors', 0, type=int), count)
+    tags = request.args.getlist('tags[]', int)
 
     failed = AccentService.get_with_user_stats(
         user=current_user, 
         filters=[
             WordStatistics.failed > 0,
             Word.level <= level,
+            Word.tags.contains(tags),
         ],
         order_by=[WordStatistics.success/WordStatistics.failed, order_desc(WordStatistics.failed), order_random()],
         count=errors
@@ -45,6 +47,7 @@ def prepare_task():
         filters=[
             Word.level <= level,
             Word.id.notin_([failed.id for failed in failed]),
+            Word.tags.contains(tags),
         ],
         order_by=[
             nulls_first(WordStatistics.success + WordStatistics.failed), 
