@@ -11,7 +11,7 @@ class WordService:
             Word
         ).filter(
             Word.fullword == word_name,
-            context is None or Word.context == context
+            Word.context == context,
         )
         return db.session.execute(query).scalar_one_or_none()
 

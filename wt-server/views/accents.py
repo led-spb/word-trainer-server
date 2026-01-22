@@ -20,6 +20,8 @@ class WordAccentAccentSchema(Schema):
     context = fields.Str()
     description = fields.Str()
     level = fields.Int(required=True)
+    rules = fields.List(fields.Integer())
+    tags = fields.List(fields.Integer())
     accents = fields.Pluck(AccentPositionSchema, 'position', many=True)
 
 

@@ -22,6 +22,8 @@ class WordSpellingSchema(Schema):
     context = fields.Str()
     description = fields.Str()
     level = fields.Int(required=True)
+    rules = fields.List(fields.Integer())
+    tags = fields.List(fields.Integer())
     spellings = fields.Nested(SpellingSchema, many=True, dump_only=True)
 
 

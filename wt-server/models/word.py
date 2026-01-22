@@ -1,7 +1,7 @@
 from enum import Enum
 from . import db
 from typing import List
-from sqlalchemy import Integer, String, ForeignKey, JSON
+from sqlalchemy import Integer, String, Text, ForeignKey, JSON
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -15,6 +15,7 @@ class Word(db.Model):
     context: Mapped[str] = mapped_column(String(500), nullable=True)
     description: Mapped[str] = mapped_column(String(1000), nullable=True)
     tags: Mapped[List['int']] = mapped_column(JSONB, nullable=True)
+    rules: Mapped[List['int']] = mapped_column(JSONB, nullable=True)
 
     spellings: Mapped[List['Spelling']] = relationship(cascade='all,delete')
     accents: Mapped[List['Accent']] = relationship(cascade='all,delete')
@@ -66,4 +67,4 @@ class Rule(db.Model):
     __tablename__ = 'rules'
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    description: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
