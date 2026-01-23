@@ -5,3 +5,4 @@ from .spellings import spellings
 from .accents import accents
 from .invites import invites
 from .rules import rules
+from .words import words

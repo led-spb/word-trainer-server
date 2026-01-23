@@ -6,7 +6,13 @@ from sqlalchemy import func
 class WordService:
 
     @classmethod
-    def find_by_name(cls, word_name: str, context :str = None) -> Word:
+    def get_by_id(cls, word_id :int) -> Union[Word,None]:
+        return db.session.execute(
+            db.select(Word).filter(Word.id == word_id)
+        ).scalar_one_or_none()
+
+    @classmethod
+    def find_by_name(cls, word_name: str, context :str = None) -> Union[Word,None]:
         query = db.select(
             Word
         ).filter(

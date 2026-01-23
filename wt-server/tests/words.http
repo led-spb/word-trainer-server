@@ -1,0 +1,11 @@
+# @import ./auth.http
+
+###
+# @ref auth
+GET http://localhost:5000/api/words?name=создать
+Authorization: Bearer {{ auth.access_token }}
+
+###
+# @ref auth
+GET http://localhost:5000/api/words?name=задАть
+Authorization: Bearer {{ auth.access_token }}
