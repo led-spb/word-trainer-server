@@ -4,3 +4,4 @@ from .tags import tags
 from .spellings import spellings
 from .accents import accents
 from .invites import invites
+from .rules import rules

@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Union
 from ..models import db
-from ..models.word import Word, Tag
+from ..models.word import Word, Tag, Rule
 from sqlalchemy import func
 
 class WordService:
@@ -30,3 +30,9 @@ class WordService:
         ).scalars().all()
 
         return tags
+
+    @classmethod
+    def get_rule_by_id(cld, rule_id: int) -> Union[Rule,None]:
+        return db.session.execute(
+            db.select(Rule).filter(Rule.id == rule_id)
+        ).scalar_one_or_none()

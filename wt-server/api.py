@@ -26,5 +26,6 @@ def create_api(app: flask.Flask) -> flask.Flask:
     app.register_blueprint(accents, url_prefix='/api/accents')
     app.register_blueprint(invites, url_prefix='/api/invites')
     app.register_blueprint(tags, url_prefix='/api/tags')
+    app.register_blueprint(rules, url_prefix='/api/rules')
 
     return app
