@@ -32,7 +32,7 @@ class WordService:
     @classmethod
     def get_tags_dictonary(cls) -> List[Tag]:
         tags = db.session.execute(
-            db.select(Tag)
+            db.select(Tag).order_by(Tag.desciption)
         ).scalars().all()
 
         return tags
