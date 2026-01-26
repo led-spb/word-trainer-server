@@ -15,12 +15,10 @@ tools_commands = AppGroup('tools', help='Custom tools')
 @click.argument('count', default=10, type=int)
 def exec_merge_words(count :int):
 
-    distinct_count = func.count(distinct(Word.id)).label('distinct_count')
+    distinct_count = func.count().label('distinct_count')
 
     query = db.select(
         Word.fullword, Word.context, distinct_count
-    ).join(
-        Spelling
     ).group_by(
         Word.fullword, Word.context,
     ).having(
@@ -35,11 +33,11 @@ def exec_merge_words(count :int):
         query = db.select(
             Word
         ).options(
-            joinedload(Word.spellings)
+            joinedload(Word.spellings),
+            joinedload(Word.accents)
         ).filter(
             Word.fullword == item[0],
             Word.context == item[1],
-            Word.spellings.any(),
         )
 
         words = db.session.execute(query).unique().scalars().all()
@@ -58,8 +56,9 @@ def merge_words(words :List[Word]) -> Word:
         fullword=words[0].fullword,
         context=words[0].context,
         level=min(words, key=lambda x: x.level).level,
-        description=min(words, key=lambda x: len(x.description)).description,
-        spellings=[],
+        description=min([w.description for w in words if w.description is not None], key=len, default=None),
+        tags=list(set(itertools.chain(*[w.tags for w in words if w.tags is not None]))),
+        rules=list(set(itertools.chain(*[w.rules for w in words if w.rules is not None]))),
     )
 
     spellings = itertools.chain.from_iterable(

@@ -67,4 +67,6 @@ class Rule(db.Model):
     __tablename__ = 'rules'
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
+    type: Mapped[TaskTypeEnum] = mapped_column(String(20), nullable=False)

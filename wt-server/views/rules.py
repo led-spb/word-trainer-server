@@ -10,6 +10,8 @@ rules = Blueprint('rules', __name__)
 class RuleSchema(Schema):
     id = fields.Integer()
     description = fields.String()
+    title = fields.String()
+    type = fields.String()
 
 
 @rules.route('<int:rule_id>', methods=['GET'])
