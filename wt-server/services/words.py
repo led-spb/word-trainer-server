@@ -33,7 +33,7 @@ class WordService:
     @classmethod
     def get_topics(cls) -> Sequence[Topic]:
         topics = db.session.execute(
-            db.select(Topic).order_by(Topic.description)
+            db.select(Topic).order_by(Topic.name)
         ).scalars().all()
 
         return topics

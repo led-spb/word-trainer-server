@@ -22,7 +22,7 @@ class WordSchema(Schema):
     description = fields.Str()
     level = fields.Int(required=True)
     rules = fields.List(fields.Integer())
-    tags = fields.List(fields.Integer())
+    topics = fields.List(fields.Integer())
 
     spellings = fields.Nested(SpellingSchema, many=True, dump_only=True)
     accents = fields.Pluck(AccentPositionSchema, 'position', many=True)

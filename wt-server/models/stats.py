@@ -33,7 +33,7 @@ class UserTopicStatistics(Base):
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, primary_key=True)
     recorded_at: Mapped[datetime.date] = mapped_column(Date(), nullable=False, primary_key=True, default=datetime.date.today)
-    topic_id: Mapped[int] = mapped_column(ForeignKey("tags.id"), nullable=False, primary_key=True)
+    topic_id: Mapped[int] = mapped_column(ForeignKey("topics.id"), nullable=False, primary_key=True)
 
     success: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     failed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

@@ -109,12 +109,12 @@ def update_user_stat():
 
 class TopicSchema(Schema):
     id = fields.Int()
-    description = fields.String(data_key='title')
+    name = fields.String()
     type = fields.String()
 
 class TopicsReportSchema(DayStatSchema):
     #Topic = fields.Nested("TopicSchema", data_key='topic')
-    Topic = fields.Pluck(TopicSchema(), field_name='description', data_key='description')
+    Topic = fields.Pluck(TopicSchema(), field_name='name', data_key='name')
 
 @stats_view.get('/topics')
 @jwt_required()

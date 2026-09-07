@@ -76,19 +76,19 @@ class CSVReader:
 @imports_commands.command('words', help='Import words from csv file')
 @click.option('--level', type=click.INT, default=20)
 @click.option('--skip-exists', is_flag=True, default=False)
-@click.option('--tag', 'tags', multiple=True, type=click.INT)
+@click.option('--topic', 'topics', multiple=True, type=click.INT)
 @click.option('--rule', 'rules', multiple=True, type=click.INT)
 @click.argument('filename', type=str)
-def import_word(filename, level, skip_exists, tags, rules):
+def import_word(filename, level, skip_exists, topics, rules):
     with CSVReader(filename) as reader:
         for data in reader:
             word = create_word(data, level, skip_exists)
 
-            if len(tags) > 0:
-                if word.tags is None:
-                    word.tags = tags
+            if len(topics) > 0:
+                if word.topics is None:
+                    word.topics = topics
                 else:
-                    word.tags = list(set(word.tags + list(tags)))
+                    word.topics = list(set(word.topics + list(topics)))
 
             if len(rules) > 0:
                 if word.rules is None:

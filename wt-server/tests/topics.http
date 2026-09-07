@@ -2,6 +2,6 @@
 
 ###
 # @ref auth
-GET http://localhost:5000/api/tags
+GET http://localhost:5000/api/topics
 Authorization: Bearer {{ auth.accessToken }}
 

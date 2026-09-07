@@ -40,6 +40,11 @@ class UserStatService:
         ).outerjoin(
             WordStatistics, sa.and_(Word.id == WordStatistics.word_id, WordStatistics.user_id == user.id)
         ).filter(
+            sa.or_(
+                Word.accents.any(),
+                Word.spellings.any()
+            )
+        ).filter(
             *filters
         ).order_by(
             *order_by
@@ -160,7 +165,7 @@ class UserStatService:
 
     @classmethod
     def _update_topic_statistics(cls, user: User, words: Sequence[Word], success: List[int], failed: List[int]):
-        word_topics = {word.id: word.tags for word in words }
+        word_topics = {word.id: word.topics for word in words }
         topics = {
             topic: {'success': 0, 'failed': 0}
             for topic in itertools.chain.from_iterable(word_topics.values())

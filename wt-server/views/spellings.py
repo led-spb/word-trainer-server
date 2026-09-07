@@ -26,7 +26,7 @@ class WordSpellingSchema(Schema):
     description = fields.Str()
     level = fields.Int(required=True)
     rules = fields.List(fields.Integer())
-    tags = fields.List(fields.Integer())
+    topics = fields.List(fields.Integer())
     spellings = fields.Nested(SpellingSchema, many=True, dump_only=True)
 
 
@@ -36,12 +36,12 @@ def prepare_task():
     level = request.args.get('level', 10, type=int)
     count = min(request.args.get('count', 20, type=int), 50)
     errors = min(request.args.get('errors', 0, type=int), count)
-    tags = request.args.getlist('tags[]', int)
+    topics = request.args.getlist('topics[]', int)
 
     default_filters = [Word.level <= level,]
-    if len(tags) > 0:
+    if len(topics) > 0:
         default_filters.append(
-            or_(*[Word.tags.contains([tag]) for tag in tags])
+            or_(*[Word.topics.contains([topic]) for topic in topics])
         )
 
     failed = SpellingService.get_with_user_stats(

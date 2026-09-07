@@ -67,7 +67,7 @@ def merge_words(words :Sequence[Word]) -> Word|None:
         fullword=words[0].fullword,
         context=words[0].context,
         level=min(words, key=lambda x: x.level).level,
-        tags=list(set(itertools.chain(*[w.tags for w in words if w.tags is not None]))),
+        topics=list(set(itertools.chain(*[w.topics for w in words if w.topics is not None]))),
         rules=list(set(itertools.chain(*[w.rules for w in words if w.rules is not None]))),
     )
 
@@ -173,59 +173,4 @@ def notify(email: str, message: str):
         vapid_claims={
             "sub": "mailto:{0}".format(current_app.config.get('ADMIN_EMAIL'))
         }
-    )
-
-
-@tools_commands.command('gather', help='Gather user statistics')
-def gather_statistics():
-    # db.session.execute(
-    #     db.delete(
-    #         UserTopicSTatistics
-    #     ).filter(
-    #         or_(
-    #             UserTopicSTatistics.recorded_at == date.today(),
-    #             UserTopicSTatistics.recorded_at < date.today() - timedelta(days=60)
-    #         )
-    #     )
-    # )
-
-    # gather_user_statistics()
-    # gather_topic_statustics()
-    # # todo: gather_rule_statistics
-
-    # db.session.commit()
-    pass
-
-def gather_user_statistics():
-    query = db.select(
-        WordStatistics.user_id,
-        func.sum(WordStatistics.success+WordStatistics.failed).label('total'),
-        func.sum(WordStatistics.failed).label('failed'),
-    ).group_by(WordStatistics.user_id)
-
-    db.session.execute(
-        db.insert(UserTopicStatistics).from_select(["user_id", "total", "failed"], query)
-    )
-
-def gather_topic_statustics():
-    words_query = db.select(
-        Word.id.label('word_id'),
-        cast(func.jsonb_array_elements(Word.tags), Numeric).label('tag_id')
-    ).subquery()
-
-    query = db.select(
-        WordStatistics.user_id,
-        Topic.id.label('tag_id'),
-        func.sum(WordStatistics.success+WordStatistics.failed).label('total'),
-        func.sum(WordStatistics.failed).label('failed')
-    ).join(
-        words_query, WordStatistics.word_id == words_query.c.word_id
-    ).join(
-        Topic, words_query.c.tag_id == Topic.id
-    ).group_by(
-        WordStatistics.user_id, Topic.id, Topic.description
-    )
-
-    db.session.execute(
-        db.insert(UserTopicStatistics).from_select(["user_id", "tag_id", "total", "failed"], query)
     )
