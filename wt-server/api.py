@@ -36,14 +36,10 @@ def create_api(app: flask.Flask) -> flask.Flask:
     app.register_blueprint(users_view, url_prefix='/api/user')
     app.register_blueprint(pushes_view, url_prefix='/api/user/push')
     app.register_blueprint(stats_view, url_prefix='/api/user/stat')
-
-    app.register_blueprint(spellings_view, url_prefix='/api/spellings')
-    app.register_blueprint(accents_view, url_prefix='/api/accents')
     app.register_blueprint(invites_view, url_prefix='/api/invites')
     app.register_blueprint(rules_view, url_prefix='/api/rules')
     app.register_blueprint(words_view, url_prefix='/api/words')
     app.register_blueprint(tasks_view, url_prefix='/api/tasks')
-
-    # deprecated api, need to use /api/topics
     app.register_blueprint(topics_view, url_prefix='/api/topics')
+
     return app

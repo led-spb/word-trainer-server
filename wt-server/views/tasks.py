@@ -1,14 +1,16 @@
-from flask import Blueprint, request, current_app
-from ..models import db, nulls_first, order_random, order_desc
-from ..models.word import Word, Spelling
+from flask import Blueprint, request, abort
+from ..models import db, order_random, order_desc
+from ..models.user import User
+from ..models.word import Word
 from ..models.task import Task
 from ..models.stats import WordStatistics
 from ..services.tasks import TaskService
 from ..services.stats import UserStatService
-
+from datetime import datetime
 from marshmallow import Schema, fields
 from flask_jwt_extended import jwt_required, current_user
 from sqlalchemy import or_
+from typing import Iterable
 
 
 tasks_view = Blueprint('tasks', __name__)
@@ -49,23 +51,70 @@ def get_user_tasks():
     return TaskSchema().dump(tasks, many=True)
 
 
-@tasks_view.route('prepare')
-@jwt_required()
-def prepare_task():
-    count = min(request.args.get('count', 20, type=int), 50)
-    # errors = min(request.args.get('errors', 0, type=int), count)
-    topics = request.args.getlist('topics[]', int)
-
-    filters = []
+def make_user_task(user: User, topics: list[int], word_count: int, repeat_count: int) -> Iterable[Word]:
+    default_filters = []
     if len(topics) > 0:
-        filters.append(
+        default_filters.append(
             or_(*[Word.topics.contains([topic]) for topic in topics])
         )
 
+    words = []
+    if repeat_count > 0:
+        repeats = UserStatService.get_user_words(
+            current_user,
+            repeat_count,
+            default_filters+[WordStatistics.failed > 0],
+            [order_random()]
+        ).scalars()
+        words.extend(repeats)
+
     data = UserStatService.get_user_words(
         current_user,
-        count,
-        filters,
-        [order_desc(WordStatistics.failed)]
+        word_count-len(words),
+        default_filters,
+        [order_random()]
     ).scalars()
-    return WordSchema().dump(data, many=True)
+    words.extend(data)
+    return words
+
+@tasks_view.route('<int:task_id>', methods=['GET'])
+@jwt_required()
+def get_task_content(task_id: int):
+    task = TaskService.get_user_task(current_user, task_id)
+    if task is None:
+        abort(404)
+
+    words = make_user_task(
+        user=current_user,
+        topics=task.topics,
+        word_count=task.word_count,
+        repeat_count=task.repeat_count
+    )
+    return WordSchema().dump(words, many=True)
+
+@tasks_view.route('<int:task_id>/complete', methods=['PUT'])
+@jwt_required()
+def complete_task(task_id: int):
+    task = TaskService.get_user_task(current_user, task_id)
+    if task is None:
+        abort(404)
+    task.executed_at = datetime.now()
+    db.session.add(task)
+    db.session.commit()
+    return '', 204
+
+
+@tasks_view.route('prepare', methods=['GET'])
+@jwt_required()
+def prepare_task():
+    word_count = min(request.args.get('word_count', 20, type=int), 50)
+    repeat_count = min(request.args.get('repeat_count', 0, type=int), word_count)
+    topics = request.args.getlist('topics[]', int)
+
+    words = make_user_task(
+        user=current_user,
+        topics=topics,
+        word_count=word_count,
+        repeat_count=repeat_count
+    )
+    return WordSchema().dump(words, many=True)

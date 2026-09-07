@@ -5,3 +5,9 @@
 GET http://localhost:5000/api/tasks
 Authorization: Bearer {{ auth.accessToken }}
 
+
+###
+# @ref auth
+GET http://localhost:5000/api/tasks/2
+Authorization: Bearer {{ auth.accessToken }}
+
